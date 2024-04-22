@@ -1,7 +1,6 @@
 name: Publish to Snapstore
 
 on:
-  # TODO: Remove this
   workflow_call:
     inputs:
       source_branch:
@@ -42,5 +41,65 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
       with: 
-        fetch-depth: 0
+        # fetch-depth: 0
         ref: ${{ inputs.source_branch }}
+    - name: test tag command
+      run: |
+        git describe --tags --abbrev=10
+    - uses: snapcore/action-build@v1.2.0
+      id: snapcraft
+    - uses: actions/upload-artifact@v4
+      id: upload-snap-artifact
+      with:
+        name: ${{ env.SNAP_ARTIFACT_NAME }}
+        path: ${{ steps.snapcraft.outputs.snap }}
+
+  test:
+    name: Test the snap
+    runs-on: ubuntu-22.04
+    needs:
+      - build-snap
+    steps:
+    # TODO: Important?
+    # - name: Checkout repository
+    #   uses: actions/checkout@v4
+    #   with: 
+    #     fetch-depth: 0
+    #     ref: ${{ inputs.source_branch }}
+    - uses: actions/download-artifact@v4
+      id: download-snap-artifact
+      with:
+        name: ${{ env.SNAP_ARTIFACT_NAME }}
+    - name: Install the snap locally
+      run: sudo snap install ${{ steps.download-snap-artifact.outputs.download-path }}
+
+    - name: Set up Microk8s
+      uses: balchua/microk8s-actions@v0.3.2
+      with:
+        channel: '1.28/stable'
+        addons: '["hostpath-storage"]'
+
+    - name: Test dss snap
+      run: |
+        dss initialize --kubeconfig ~/.kube/config
+        dss create x --image kubeflownotebookswg/jupyter-scipy:v1.8.0 --kubeconfig ~/.kube/config
+
+  publish-snap:
+    name: Publish to Snapstore
+    runs-on: ubuntu-22.04
+    needs:
+      - build-snap
+      - test
+    steps:
+    - uses: actions/download-artifact@v4
+      id: download-snap-artifact
+      with:
+        name: ${{ env.SNAP_ARTIFACT_NAME }}
+
+    - uses: snapcore/action-publish@v1
+      env:
+        SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_STORE_CREDENTIALS }}
+      with:
+        snap: ${{ steps.download-snap-artifact.outputs.download-path }}
+        # TODO: Set the release properly
+        release: ${{ inputs.destination_channel }}
