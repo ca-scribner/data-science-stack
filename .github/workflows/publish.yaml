@@ -1,28 +1,46 @@
-name: Upload Python Package
+name: Publish to Snapstore
 
 on:
-  release:
-    types: [released]
+  # TODO: Remove this
+  workflow_call:
+    inputs:
+      source_branch:
+        description: Github branch from this repo to publish.  If blank, will use the default branch
+        default: ''
+        required: false
+        type: string
+      destination_channel:
+        description: Snapstore channel to publish to
+        required: false
+        default: 'latest/edge'
+        type: string
+    secrets:
+      # TODO: Required only if we publish
+      SNAPCRAFT_STORE_CREDENTIALS:
+        required: true
+  workflow_dispatch:
+    inputs:
+      source_branch:
+        description: Github branch from this repo to publish.  If blank, will use the default branch
+        required: false
+        default: ''
+        type: string
+      destination_channel:
+        description: Snapstore channel to publish to
+        required: false
+        default: 'latest/edge'
+        type: string
+
+env:
+  SNAP_ARTIFACT_NAME: dss-snap
 
 jobs:
-  deploy:
+  build-snap:
+    name: Build the snap
     runs-on: ubuntu-22.04
-
     steps:
-    - uses: actions/checkout@v3
-      with:
-        ref: ${{ env.GITHUB_SHA }}
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build
-
-    - name: Build package
-      run: python -m build
-
-    - name: Publish package
-      uses: pypa/gh-action-pypi-publish@v1.8.1
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with: 
+        fetch-depth: 0
+        ref: ${{ inputs.source_branch }}
