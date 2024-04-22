@@ -14,6 +14,12 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with: 
+        # Fetch the entire repo, not just the last commit, so we can resolve the command
+        # `git describe --tags --abbrev=10` in snapcraft.yaml build
+        # There are better ways of doing this, see:
+        # https://stackoverflow.com/questions/66349002/get-latest-tag-git-describe-tags-when-repo-is-cloned-with-depth-1
+        fetch-depth: 0
     - name: test tag command
       run: |
         git describe --tags --abbrev=10
