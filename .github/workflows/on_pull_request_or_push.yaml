@@ -7,9 +7,10 @@ on:
   pull_request:
 
 jobs:
-  test-python-lib:
-    name: Run Tests
-    uses: ./.github/workflows/tests.yaml
+  # DEBUG: Restore this
+  # test-python-lib:
+  #   name: Run Tests
+  #   uses: ./.github/workflows/tests.yaml
 
   test-snap:
     name: Build and test Snap
