@@ -20,6 +20,7 @@ jobs:
         # There are better ways of doing this, see:
         # https://stackoverflow.com/questions/66349002/get-latest-tag-git-describe-tags-when-repo-is-cloned-with-depth-1
         fetch-depth: 0
+        fetch-tags: true
     - name: test tag command
       run: |
         git describe --tags --abbrev=10
