@@ -1,3 +1,5 @@
+# Note: The trigger for GPU tests is based off the name of this workflow.
+#       If we rename this workflow, update the GPU test trigger as well.
 name: Build and test Snap
 
 on:
@@ -57,7 +59,7 @@ jobs:
     - name: Export kubeconfig where strict snap can access it
       run: |
         mkdir -p ~/.dss
-        microk8s config > ${{ env.KUBECONFIG }}
+        cp ~/.kube/config ${{ env.KUBECONFIG }}
 
     # - name: Setup tmate session
     #   uses: mxschmitt/action-tmate@v3
