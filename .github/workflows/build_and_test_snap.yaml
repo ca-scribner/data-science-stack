@@ -1,3 +1,5 @@
+# Note: The trigger for GPU tests is based off the name of this workflow.
+#       If we rename this workflow, update the GPU test trigger as well.
 name: Build and test Snap
 
 on:
@@ -6,19 +8,25 @@ on:
 
 env:
   SNAP_ARTIFACT_NAME: dss-snap
+  SNAP_FILE: dss.snap
+  KUBECONFIG: ~/.dss/config
 
 jobs:
   build-snap:
     name: Build the snap
     runs-on: ubuntu-22.04
+    outputs:
+      snap-file: ${{ steps.snapcraft.outputs.snap }}
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-    - name: test tag command
-      run: |
-        git describe --tags --abbrev=10
+
     - uses: snapcore/action-build@v1.2.0
       id: snapcraft
+      with:
+        # Use a deterministic file name, so we can easily reference it later
+        snapcraft-args: "-o ${{ env.SNAP_FILE }}"
+
     - uses: actions/upload-artifact@v4
       id: upload-snap-artifact
       with:
@@ -31,15 +39,16 @@ jobs:
     needs:
       - build-snap
     steps:
-    # TODO: Important?
-    # - name: Checkout repository
-    #   uses: actions/checkout@v4
     - uses: actions/download-artifact@v4
       id: download-snap-artifact
       with:
         name: ${{ env.SNAP_ARTIFACT_NAME }}
+
     - name: Install the snap locally
-      run: sudo snap install ${{ steps.download-snap-artifact.outputs.download-path }}
+      # use --dangerous so we trust the snap even though it doesn't have signatures
+      run: |
+        sudo snap install ${{ env.SNAP_FILE }} --dangerous
+        sudo snap connect data-science-stack:dot-dss-config
 
     - name: Set up Microk8s
       uses: balchua/microk8s-actions@v0.3.2
@@ -47,7 +56,12 @@ jobs:
         channel: '1.28/stable'
         addons: '["hostpath-storage"]'
 
+    - name: Export kubeconfig where strict snap can access it
+      run: |
+        mkdir -p ~/.dss
+        cp ~/.kube/config ${{ env.KUBECONFIG }}
+
     - name: Test dss snap
       run: |
-        dss initialize --kubeconfig ~/.kube/config
-        dss create x --image kubeflownotebookswg/jupyter-scipy:v1.8.0 --kubeconfig ~/.kube/config
+        data-science-stack.dss initialize --kubeconfig ${{ env.KUBECONFIG }}
+        data-science-stack.dss create x --image kubeflownotebookswg/jupyter-scipy:v1.8.0 --kubeconfig ${{ env.KUBECONFIG }}
