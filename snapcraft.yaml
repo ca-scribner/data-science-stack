@@ -27,4 +27,11 @@ parts:
     source: .
     override-pull: |
       craftctl default
-      craftctl set version=$(git describe --tags --abbrev=10)
+      # Pull the version from setup.cfg, parsing the value after 
+      # the '=' and truncating any whitespace
+      CODE_VERSION=$(grep version setup.cfg)
+      CODE_VERSION=$(echo ${CODE_VERSION#*=} | tr -d ' ')
+      COMMIT_HASH=$(git rev-parse HEAD)
+      VERSION=${CODE_VERSION}-${COMMIT_HASH}
+      # version field has max length of 32 characters
+      craftctl set version=${VERSION:0:32}
