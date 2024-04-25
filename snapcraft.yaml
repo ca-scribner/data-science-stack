@@ -39,8 +39,8 @@ parts:
   data-science-stack:
     plugin: python
     source: .
-    # DEBUG: remove this.  added to "build" the charm quickly for CI testing
-    override-build: |
-      mkdir -p /root/prime/bin
-      touch /root/prime/bin/dss
-      chmod a+rwx /root/prime/bin/dss
+    # # DEBUG: remove this.  added to "build" the charm quickly for CI testing
+    # override-build: |
+    #   mkdir -p /root/prime/bin
+    #   touch /root/prime/bin/dss
+    #   chmod a+rwx /root/prime/bin/dss
