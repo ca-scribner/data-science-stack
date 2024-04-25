@@ -46,7 +46,9 @@ jobs:
 
     - name: Install the snap locally
       # use --dangerous so we trust the snap even though it doesn't have signatures
-      run: sudo snap install ${{ env.SNAP_FILE }} --dangerous
+      run: |
+        sudo snap install ${{ env.SNAP_FILE }} --dangerous
+        snap connect data-science-stack:dot-dss-config
 
     - name: Set up Microk8s
       uses: balchua/microk8s-actions@v0.3.2
