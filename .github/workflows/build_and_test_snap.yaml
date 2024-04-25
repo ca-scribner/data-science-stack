@@ -41,10 +41,11 @@ jobs:
       id: download-snap-artifact
       with:
         name: ${{ env.SNAP_ARTIFACT_NAME }}
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
+    # - name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3
     - name: Install the snap locally
-      run: sudo snap install ${{ needs.build-snap.outputs.snap-file }}
+      # --dangerous so we trust the snap locally
+      run: sudo snap install ${{ needs.build-snap.outputs.snap-file }} --dangerous
 
     - name: Set up Microk8s
       uses: balchua/microk8s-actions@v0.3.2
