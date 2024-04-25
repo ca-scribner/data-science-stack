@@ -21,9 +21,6 @@ jobs:
         # https://stackoverflow.com/questions/66349002/get-latest-tag-git-describe-tags-when-repo-is-cloned-with-depth-1
         fetch-depth: 0
         fetch-tags: true
-    - name: test tag command
-      run: |
-        git describe --tags --abbrev=10
     - uses: snapcore/action-build@v1.2.0
       id: snapcraft
     - uses: actions/upload-artifact@v4
