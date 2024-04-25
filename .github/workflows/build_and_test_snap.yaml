@@ -35,6 +35,8 @@ jobs:
       id: download-snap-artifact
       with:
         name: ${{ env.SNAP_ARTIFACT_NAME }}
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
     - name: Install the snap locally
       run: sudo snap install ${{ steps.download-snap-artifact.outputs.download-path }}
 
