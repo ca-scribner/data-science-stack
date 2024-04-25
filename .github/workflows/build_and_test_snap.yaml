@@ -53,6 +53,8 @@ jobs:
         channel: '1.28/stable'
         addons: '["hostpath-storage"]'
 
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
     - name: Test dss snap
       run: |
         data-science-stack.dss initialize --kubeconfig ~/.kube/config
