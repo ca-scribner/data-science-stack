@@ -7,6 +7,7 @@ on:
 env:
   SNAP_ARTIFACT_NAME: dss-snap
   SNAP_FILE: dss.snap
+  KUBECONFIG: ~/.dss/config
 
 jobs:
   build-snap:
@@ -44,11 +45,8 @@ jobs:
     # - name: Setup tmate session
     #   uses: mxschmitt/action-tmate@v3
     - name: Install the snap locally
-      # use --devmode because the snap is strictly confined and we don't have a way to
-      # pass a kubeconfig file to a strict snap yet
-      # TODO after https://github.com/canonical/data-science-stack/issues/37: Remove --devmode
       # --dangerous so we trust the snap locally
-      run: sudo snap install ${{ needs.build-snap.outputs.snap-file }} --dangerous --devmode
+      run: sudo snap install ${{ needs.build-snap.outputs.snap-file }} --dangerous
 
     - name: Set up Microk8s
       uses: balchua/microk8s-actions@v0.3.2
@@ -56,9 +54,12 @@ jobs:
         channel: '1.28/stable'
         addons: '["hostpath-storage"]'
 
+    - name: Export kubeconfig where strict snap can access it
+      run: microk8s config > ${{ env.KUBECONFIG }}
+
     # - name: Setup tmate session
     #   uses: mxschmitt/action-tmate@v3
     - name: Test dss snap
       run: |
-        data-science-stack.dss initialize --kubeconfig ~/.kube/config
-        data-science-stack.dss create x --image kubeflownotebookswg/jupyter-scipy:v1.8.0 --kubeconfig ~/.kube/config
+        data-science-stack.dss initialize --kubeconfig ${{ env.KUBECONFIG }}
+        data-science-stack.dss create x --image kubeflownotebookswg/jupyter-scipy:v1.8.0 --kubeconfig ${{ env.KUBECONFIG }}
