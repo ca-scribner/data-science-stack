@@ -55,5 +55,5 @@ jobs:
 
     - name: Test dss snap
       run: |
-        data-science-stack initialize --kubeconfig ~/.kube/config
-        data-science-stack create x --image kubeflownotebookswg/jupyter-scipy:v1.8.0 --kubeconfig ~/.kube/config
+        data-science-stack.dss initialize --kubeconfig ~/.kube/config
+        data-science-stack.dss create x --image kubeflownotebookswg/jupyter-scipy:v1.8.0 --kubeconfig ~/.kube/config
