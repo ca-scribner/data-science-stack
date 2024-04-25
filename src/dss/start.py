@@ -12,9 +12,9 @@ from dss.utils import does_notebook_exist
 logger = setup_logger("logs/dss.log")
 
 
-def stop_notebook(name: str, lightkube_client: Client) -> None:
+def start_notebook(name: str, lightkube_client: Client) -> None:
     """
-    Stops a Notebook server on the Kubernetes cluster by scaling down the Notebook's Deployment.
+    Start a Notebook server on the Kubernetes cluster by scaling up the Notebook's Deployment to 1.
 
     Args:
         name (str): The name of the notebook server.
@@ -24,22 +24,22 @@ def stop_notebook(name: str, lightkube_client: Client) -> None:
     if not does_notebook_exist(
         name=name, namespace=DSS_NAMESPACE, lightkube_client=lightkube_client
     ):
-        logger.debug(f"Failed to stop Notebook. Notebook {name} does not exist.")
-        logger.error(f"Failed to stop Notebook. Notebook {name} does not exist.")
+        logger.debug(f"Failed to start notebook {name}. Notebook {name} does not exist.")
+        logger.error(f"Failed to start notebook. Notebook {name} does not exist.")
         logger.info("Run 'dss list' to check all notebooks.")
         raise RuntimeError()
 
     obj = Deployment.Scale(
-        metadata=ObjectMeta(name=name, namespace=DSS_NAMESPACE), spec=ScaleSpec(replicas=0)
+        metadata=ObjectMeta(name=name, namespace=DSS_NAMESPACE), spec=ScaleSpec(replicas=1)
     )
 
     try:
         lightkube_client.replace(obj)
         logger.info(
-            f"Stopping the notebook {name}. Check `dss list` for the status of the notebook."
+            f"Starting the notebook {name}. Check `dss list` for the status of the notebook."
         )
         return
     except ApiError as e:
-        logger.debug(f"Failed to scale down Deployment {name}: {e}", exc_info=True)
-        logger.error(f"Failed to stop notebook {name}.")
+        logger.debug(f"Failed to scale up Deployment {name}: {e}.", exc_info=True)
+        logger.error(f"Failed to start notebook {name}.")
         raise RuntimeError()

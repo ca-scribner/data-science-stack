@@ -6,7 +6,7 @@ from lightkube.models.meta_v1 import ObjectMeta
 from lightkube.resources.apps_v1 import Deployment
 from test_utils import FakeApiError
 
-from dss.stop import stop_notebook
+from dss.start import start_notebook
 from dss.utils import DSS_NAMESPACE
 
 
@@ -24,39 +24,39 @@ def mock_logger() -> MagicMock:
     """
     Fixture to mock the logger object.
     """
-    with patch("dss.stop.logger") as mock_logger:
+    with patch("dss.start.logger") as mock_logger:
         yield mock_logger
 
 
-def test_stop_notebook_success(
+def test_start_notebook_success(
     mock_client: MagicMock,
     mock_logger: MagicMock,
 ) -> None:
     """
-    Test case to verify successful stop_notebook call.
+    Test case to verify successful start_notebook call.
     """
     notebook_name = "test-notebook"
     expected_deployment_scale = Deployment.Scale(
         metadata=ObjectMeta(name=notebook_name, namespace=DSS_NAMESPACE),
-        spec=ScaleSpec(replicas=0),
+        spec=ScaleSpec(replicas=1),
     )
 
     # Call the function to test
-    stop_notebook(notebook_name, mock_client)
+    start_notebook(notebook_name, mock_client)
 
     # Assertions
     mock_client.replace.assert_called_once_with(expected_deployment_scale)
     mock_logger.info.assert_called_with(
-        f"Stopping the notebook {notebook_name}. Check `dss list` for the status of the notebook."
+        f"Starting the notebook {notebook_name}. Check `dss list` for the status of the notebook."
     )
 
 
-def test_stop_notebook_not_found(
+def test_start_notebook_not_found(
     mock_client: MagicMock,
     mock_logger: MagicMock,
 ) -> None:
     """
-    Tests case to verify failed stop call when the notebook does not exist.
+    Tests case to verify failed start call when the notebook does not exist.
     """
     notebook_name = "test-notebook"
 
@@ -64,24 +64,24 @@ def test_stop_notebook_not_found(
 
     # Call the function to test
     with pytest.raises(RuntimeError):
-        stop_notebook(name=notebook_name, lightkube_client=mock_client)
+        start_notebook(name=notebook_name, lightkube_client=mock_client)
 
     # Assert
-    mock_logger.debug.assert_called_with(
-        f"Failed to stop Notebook. Notebook {notebook_name} does not exist."
-    )
     mock_logger.error.assert_called_with(
-        f"Failed to stop Notebook. Notebook {notebook_name} does not exist."
+        f"Failed to start notebook. Notebook {notebook_name} does not exist."
     )
     mock_logger.info.assert_called_with("Run 'dss list' to check all notebooks.")
+    mock_logger.debug.assert_called_with(
+        f"Failed to start notebook {notebook_name}. Notebook {notebook_name} does not exist."
+    )
 
 
-def test_stop_notebook_unexpected_error(
+def test_start_notebook_unexpected_error(
     mock_client: MagicMock,
     mock_logger: MagicMock,
 ) -> None:
     """
-    Tests case to verify failed stop call with ApiError on scaling.
+    Tests case to verify failed start call with ApiError on scaling.
     """
     notebook_name = "test-notebook"
 
@@ -90,10 +90,8 @@ def test_stop_notebook_unexpected_error(
 
     # Call the function to test
     with pytest.raises(RuntimeError):
-        stop_notebook(name=notebook_name, lightkube_client=mock_client)
+        start_notebook(name=notebook_name, lightkube_client=mock_client)
 
     # Assert
-    mock_logger.debug.assert_called_with(
-        f"Failed to scale down Deployment {notebook_name}: {mock_error}", exc_info=True
-    )
-    mock_logger.error.assert_called_with(f"Failed to stop notebook {notebook_name}.")
+    mock_logger.error.assert_called_with(f"Failed to start notebook {notebook_name}.")
+    mock_logger.debug(f"Failed to scale up Deployment {notebook_name} with error: {mock_error}.")
