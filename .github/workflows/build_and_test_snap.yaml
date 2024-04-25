@@ -11,6 +11,8 @@ jobs:
   build-snap:
     name: Build the snap
     runs-on: ubuntu-22.04
+    outputs:
+      snap-file: ${{ steps.snapcraft.outputs.snap }}
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
@@ -31,6 +33,7 @@ jobs:
     # TODO: Important?
     # - name: Checkout repository
     #   uses: actions/checkout@v4
+    - run: echo snap file from previous is ${{ needs.build-snap.outputs.snap-file }}
     - uses: actions/download-artifact@v4
       id: download-snap-artifact
       with:
@@ -38,7 +41,7 @@ jobs:
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
     - name: Install the snap locally
-      run: sudo snap install ${{ steps.download-snap-artifact.outputs.download-path }}
+      run: sudo snap install ${{ needs.build-snap.outputs.snap-file }}
 
     - name: Set up Microk8s
       uses: balchua/microk8s-actions@v0.3.2
