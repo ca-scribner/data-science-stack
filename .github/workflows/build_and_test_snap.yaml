@@ -55,7 +55,9 @@ jobs:
         addons: '["hostpath-storage"]'
 
     - name: Export kubeconfig where strict snap can access it
-      run: microk8s config > ${{ env.KUBECONFIG }}
+      run: |
+        mkdir -p ~/.dss
+        microk8s config > ${{ env.KUBECONFIG }}
 
     # - name: Setup tmate session
     #   uses: mxschmitt/action-tmate@v3
